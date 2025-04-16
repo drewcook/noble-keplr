@@ -28,6 +28,7 @@ This application utilizes the following resources and tech stack:
 - [Keplr Wallet](https://docs.keplr.app/api/intro/)
 - [Noble API](https://api.noble.xyz/#tag/cctp)
 - [Viem](https://viem.sh/)
+- [Railway](https://railway.com/) (Hosting + CI/CD)
 - ESlint, Prettier, Commitlint, Husky
 
 ## Techniques
