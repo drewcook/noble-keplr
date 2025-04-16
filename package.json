@@ -13,6 +13,7 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@heroicons/react": "^2.2.0",
 		"@keplr-wallet/provider-extension": "^0.12.220",
 		"next": "15.3.0",
 		"react": "^19.0.0",

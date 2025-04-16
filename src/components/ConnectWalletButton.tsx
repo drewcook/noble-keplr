@@ -1,10 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { formatAddress } from '$/utils/formatters'
 
+import { useClickOutside } from '../hooks/useClickOutside'
 import { useKeplrWallet } from './KeplrWalletProvider'
 
 export default function ConnectWalletButton() {
@@ -15,6 +16,7 @@ export default function ConnectWalletButton() {
 
 	// Hooks
 	const { isConnected, address, connect, disconnect } = useKeplrWallet()
+	useClickOutside(menuRef, () => setIsMenuOpen(false))
 
 	// Handlers
 	const handleConnectWallet = async () => {
@@ -46,18 +48,6 @@ export default function ConnectWalletButton() {
 			handleConnectWallet()
 		}
 	}
-
-	// Effects
-	// This supports closing the submenu when clicking outside of it
-	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-				setIsMenuOpen(false)
-			}
-		}
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => document.removeEventListener('mousedown', handleClickOutside)
-	}, [])
 
 	return (
 		<div className="relative" ref={menuRef}>
