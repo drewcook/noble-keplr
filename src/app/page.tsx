@@ -36,7 +36,7 @@ export default function DashboardPage() {
 	}, [account, isConnected, getAccountBalance])
 
 	return (
-		<GridContainer mdColumns={4} lgColumns={4}>
+		<GridContainer mdColumns={4}>
 			<GridColumn>
 				<aside aria-label="Dashboard Sidebar">
 					<nav aria-label="Secondary Navigation" className="rounded-xl py-6 px-3 border-border border">
