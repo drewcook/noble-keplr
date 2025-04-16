@@ -34,6 +34,10 @@
 
 	/* Utilities */
 	--text-2xl: 28px;
+
+	/* Breakpoints */
+	--breakpoint-md: 800px;
+	--breakpoint-lg: 1050px;
 }
 
 :root {
@@ -43,16 +47,19 @@
 	--foreground: var(--color-black);
 }
 
-/* @media (prefers-color-scheme: dark) {
-	:root {
-		--background: var(--color-black);
-		--foreground: var(--color-white);
-	}
-} */
-
 body {
 	background: var(--background);
 	color: var(--foreground);
 	font-family: var(--font-sans);
 	font-weight: 500;
+}
+
+button:hover {
+	cursor: pointer;
+}
+
+.bg-hero {
+	background:
+		url('/hero_bg.png') center no-repeat,
+		linear-gradient(43.03deg, #6c44ff 3.64%, #000108 105.92%);
 }
