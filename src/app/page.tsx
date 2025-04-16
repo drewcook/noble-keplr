@@ -1,103 +1,118 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import { useEffect, useState } from 'react'
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+import { useKeplrWallet } from '$/components/KeplrWalletProvider'
+import { GridColumn, GridContainer } from '$/components/layout/Grid'
+import { useNobleDollarStats } from '$/components/NobleDollarStatsProvider'
+import { formatCompact, formatDecimal, formatPercentage } from '$/utils/formatters'
+
+import MetaCard from '../components/MetaCard'
+
+const SUB_NAVIGATION_ITEMS = [
+	{ id: 'overview', label: 'Overview' },
+	{ id: 'balances', label: 'Balances' },
+] as const
+
+export default function DashboardPage() {
+	// State
+	const [activeTab, setActiveTab] = useState<(typeof SUB_NAVIGATION_ITEMS)[number]['id']>('overview')
+	const [usdnBalance, setUSDNBalance] = useState<string>('')
+	// Hooks
+	const { totalSupply, totalHolders, totalYieldAccrued, getAccountBalance } = useNobleDollarStats()
+	const { isConnected, account } = useKeplrWallet()
+
+	// Effects
+	// Fetch the USDN balance for the connected address
+	// TODO: Get balances of other tokens if/when exposed from the token provider
+	useEffect(() => {
+		const fetchUSDNBalance = async () => {
+			if (isConnected && account) {
+				const balance = await getAccountBalance(account)
+				setUSDNBalance(balance)
+			}
+		}
+		fetchUSDNBalance()
+	}, [account, isConnected, getAccountBalance])
+
+	return (
+		<GridContainer mdColumns={4} lgColumns={4}>
+			<GridColumn>
+				<aside aria-label="Dashboard Sidebar">
+					<nav aria-label="Secondary Navigation" className="rounded-xl py-6 px-3 border-border border">
+						<ul className="flex flex-col gap-2">
+							{SUB_NAVIGATION_ITEMS.map(({ id, label }) => (
+								<li
+									key={id}
+									onClick={() => setActiveTab(id)}
+									className={`
+										rounded-lg
+										py-3.5 px-3
+										cursor-pointer
+										transition-colors
+										${activeTab === id ? 'bg-blue-800 text-white' : 'hover:bg-blue-50'}
+										`}
+								>
+									{label}
+								</li>
+							))}
+						</ul>
+					</nav>
+				</aside>
+			</GridColumn>
+			<GridColumn mdSpan={3}>
+				{activeTab === 'overview' && (
+					<section aria-label="Overview Content">
+						<section
+							aria-label="Hero Banner"
+							className="bg-hero font-normal text-white mb-4 rounded-2xl py-14 px-6 flex flex-col justify-center items-center"
+						>
+							<h2 className="mb-4 text-2xl text-center">Noble Dollar, $USDN, is live!</h2>
+							<a href="https://dollar.noble.xyz/?action=onramp" target="_blank">
+								<button className="bg-purple p-2 rounded-lg w-[168px] h-[52px] hover:bg-blue-800 transition-colors">
+									Buy USDN
+								</button>
+							</a>
+						</section>
+
+						<section aria-label="Account Balance" className="border-border border p-6 rounded-2xl mb-4">
+							<div className="text-eyebrow mb-4">Your Balance</div>
+							{isConnected ? (
+								<div className="text-lg font-semibold">{formatDecimal(usdnBalance, 2, true)}</div>
+							) : (
+								<div className="text-lg font-semibold">Connect to view</div>
+							)}
+						</section>
+
+						<section aria-label="Global Stats">
+							<GridContainer mdColumns={2} lgColumns={3}>
+								<GridColumn>
+									<MetaCard primaryLabel="Total Supply" primaryValue={formatDecimal(totalSupply, 3, true)} />
+								</GridColumn>
+								<GridColumn>
+									<MetaCard
+										primaryLabel="Yield Paid"
+										primaryValue={formatCompact(totalYieldAccrued, 1, true)}
+										secondaryLabel="Estimated APY"
+										secondaryValue={formatPercentage(0.0415, 1)}
+									/>
+								</GridColumn>
+								<GridColumn>
+									<MetaCard primaryLabel="Total Holders" primaryValue={formatDecimal(totalHolders, 0)} />
+								</GridColumn>
+							</GridContainer>
+						</section>
+					</section>
+				)}
+
+				{activeTab === 'balances' && (
+					<section aria-label="Balances Content">
+						<div className="border-border border rounded-xl flex justify-center items-center min-h-100">
+							Balances TBD
+						</div>
+					</section>
+				)}
+			</GridColumn>
+		</GridContainer>
+	)
 }
