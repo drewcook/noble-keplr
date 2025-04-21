@@ -1,9 +1,9 @@
 'use client'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useRef, useState } from 'react'
+import { HiBars3, HiXMark } from 'react-icons/hi2'
 
 import { useClickOutside } from '../../hooks/useClickOutside'
 import ConnectWalletButton from '../ConnectWalletButton'
@@ -52,8 +52,8 @@ export default function AppHeader() {
 							>
 								<span className="absolute -inset-0.5" />
 								<span className="sr-only">{isMobileMenuOpen ? 'Close main menu' : 'Open main menu'}</span>
-								<Bars3Icon aria-hidden="true" className={`block size-6 ${isMobileMenuOpen ? 'hidden' : 'block'}`} />
-								<XMarkIcon aria-hidden="true" className={`block size-6 ${isMobileMenuOpen ? 'block' : 'hidden'}`} />
+								<HiBars3 aria-hidden="true" className={`block size-6 ${isMobileMenuOpen ? 'hidden' : 'block'}`} />
+								<HiXMark aria-hidden="true" className={`block size-6 ${isMobileMenuOpen ? 'block' : 'hidden'}`} />
 							</button>
 
 							{/* Mobile menu dropdown */}

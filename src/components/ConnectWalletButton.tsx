@@ -24,18 +24,19 @@ export default function ConnectWalletButton() {
 		try {
 			await connect()
 		} catch {
-			console.error('Failed to connect to Keplr')
+			console.error('[ConnectWalletButton]: Failed to connect to Keplr')
 		} finally {
 			setIsLoading(false)
 		}
 	}
 
 	const handleDisconnectWallet = async () => {
+		setIsLoading(true)
 		try {
 			await disconnect()
 			setIsMenuOpen(false)
 		} catch {
-			console.error('Failed to disconnect from Keplr')
+			console.error('[ConnectWalletButton]: Failed to disconnect from Keplr')
 		} finally {
 			setIsLoading(false)
 		}

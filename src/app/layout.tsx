@@ -4,8 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
 import { KeplrWalletProvider } from '$/components/KeplrWalletProvider'
-import AppHeader from '$/components/layout/AppHeader'
-import Container from '$/components/layout/Container'
+import PrimaryLayout from '$/components/layout/PrimaryLayout'
 import { NobleDollarStatsProvider } from '$/components/NobleDollarStatsProvider'
 
 const inter = Inter({
@@ -28,10 +27,7 @@ export default function AppLayout({
 			<body className={`${inter.className} antialiased max-w-full min-h-screen p-8`}>
 				<KeplrWalletProvider>
 					<NobleDollarStatsProvider>
-						<Container>
-							<AppHeader />
-							<main aria-label="App Main Content">{children}</main>
-						</Container>
+						<PrimaryLayout>{children}</PrimaryLayout>
 					</NobleDollarStatsProvider>
 				</KeplrWalletProvider>
 			</body>

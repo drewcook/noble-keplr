@@ -1,11 +1,11 @@
 'use client'
 
-import { Key } from '@keplr-wallet/types'
-import { createContext, useContext, useState } from 'react'
+import { KeplrFallback } from '@keplr-wallet/provider-extension'
+import { ChainInfo, Keplr, Key } from '@keplr-wallet/types'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { Address } from 'viem'
 
-import { NOBLE_TESTNET_CHAIN_ID } from '$/lib/constants'
-import { getKeplr } from '$/lib/keplr'
+import { NOBLE_MAINNET_CHAIN_ID, NOBLE_TESTNET_CHAIN_ID, NOBLE_TESTNET_RPC_URL } from '$/lib/constants'
 
 type KeplrWalletProviderProps = {
 	children: React.ReactNode
@@ -17,6 +17,8 @@ type KeplrWalletContextType = {
 	account: Key | null
 	connect: () => Promise<void>
 	disconnect: () => Promise<void>
+	successMsg: string
+	errorMsg: string
 }
 
 // Context
@@ -26,6 +28,8 @@ const defaultValues: KeplrWalletContextType = {
 	account: null,
 	connect: async () => {},
 	disconnect: async () => {},
+	successMsg: '',
+	errorMsg: '',
 }
 const KeplrWalletContext = createContext<KeplrWalletContextType>(defaultValues)
 
@@ -33,34 +37,94 @@ const KeplrWalletContext = createContext<KeplrWalletContextType>(defaultValues)
 export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 	// State
 	const [isConnected, setIsConnected] = useState(defaultValues.isConnected)
+	const [keplrInstance, setKeplrInstance] = useState<Keplr | null>(null)
 	const [account, setAccount] = useState<Key | null>(defaultValues.account)
 	const [address, setAddress] = useState(defaultValues.address)
+	const [successMsg, setSuccessMsg] = useState(defaultValues.successMsg)
+	const [errorMsg, setErrorMsg] = useState(defaultValues.errorMsg)
+
+	// Get/Set Keplr Instance on init
+	useEffect(() => {
+		const keplr = getKeplr()
+		if (keplr) {
+			setKeplrInstance(keplr)
+		}
+	}, [])
+
+	const getKeplr = (): Keplr | undefined => {
+		if (typeof window === 'undefined') return undefined
+
+		/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+		if ((window as any).keplr) {
+			return new KeplrFallback(() => {
+				// Handler called when real Keplr is not installed.
+				// Show appropriate warning to users.
+				setErrorMsg(
+					'Please install the Keplr Wallet extension to use Noble. (https://chromewebstore.google.com/detail/keplr/dmkamcknogkgcdfhhbddcghachkejeap?hl=en)',
+				)
+			})
+		}
+
+		return undefined
+	}
+
+	const resetMessages = () => {
+		setSuccessMsg('')
+		setErrorMsg('')
+	}
 
 	const handleConnectWallet = async () => {
+		if (!keplrInstance) return
+		resetMessages()
+
 		try {
-			const keplr = getKeplr()
-			if (!keplr) return
-			await keplr.enable(NOBLE_TESTNET_CHAIN_ID)
-			const key = await keplr.getKey(NOBLE_TESTNET_CHAIN_ID)
+			// Set up Keplr
+			await keplrInstance.enable(NOBLE_MAINNET_CHAIN_ID)
+
+			// Suggest the preferred chain if user doesn't have it selected in Keplr
+			try {
+				const chainInfoWithoutEndpoints = await keplrInstance.getChainInfoWithoutEndpoints(NOBLE_TESTNET_CHAIN_ID)
+				const chainInfo: ChainInfo = {
+					...chainInfoWithoutEndpoints,
+					rpc: NOBLE_TESTNET_RPC_URL,
+					rest: NOBLE_TESTNET_RPC_URL,
+					// Just some TS finagling with this implementation, probably a better way to do this...
+					evm: {
+						chainId: parseInt(NOBLE_TESTNET_CHAIN_ID), // NaN
+						rpc: NOBLE_TESTNET_RPC_URL,
+					},
+				}
+				await keplrInstance.experimentalSuggestChain(chainInfo)
+				setSuccessMsg('Wallet connected!')
+			} catch (error) {
+				setErrorMsg('Failed to suggest chain')
+			}
+
+			// Get the current account and address
+			const key = await keplrInstance.getKey(NOBLE_MAINNET_CHAIN_ID)
 			if (key.ethereumHexAddress) {
 				setIsConnected(true)
 				setAccount(key)
 				setAddress(key.ethereumHexAddress as Address)
 			}
+
+			setSuccessMsg('Wallet connected!')
 		} catch {
-			console.error('Failed to connect to Keplr')
+			setErrorMsg('Failed to connect to Keplr')
 		}
 	}
 
 	const handleDisconnectWallet = async () => {
+		if (!keplrInstance) return
+		resetMessages()
+
 		try {
-			const keplr = getKeplr()
-			if (!keplr) return
-			await keplr.disable()
+			await keplrInstance.disable()
 			setIsConnected(false)
 			setAddress(null)
+			setSuccessMsg('Wallet disconnected!')
 		} catch {
-			console.error('Failed to disconnect from Keplr')
+			setErrorMsg('Failed to disconnect from Keplr')
 		}
 	}
 
@@ -72,6 +136,8 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 				address,
 				connect: handleConnectWallet,
 				disconnect: handleDisconnectWallet,
+				successMsg,
+				errorMsg,
 			}}
 		>
 			{children}
