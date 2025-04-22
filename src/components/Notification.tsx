@@ -1,7 +1,7 @@
 'use client'
 
 import { Transition } from '@headlessui/react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { CgClose } from 'react-icons/cg'
 import { LuCircleCheckBig, LuCircleX, LuInfo } from 'react-icons/lu'
 import { PiWarning } from 'react-icons/pi'
@@ -19,6 +19,11 @@ type Props = {
 export default function Notification({ isOpen, variant, title, text, onClose }: Props) {
 	const [show, setShow] = useState(isOpen)
 
+	const handleClose = useCallback(() => {
+		setShow(false)
+		if (onClose) onClose()
+	}, [onClose])
+
 	useEffect(() => {
 		if (show) {
 			const timer = setTimeout(() => {
@@ -26,12 +31,7 @@ export default function Notification({ isOpen, variant, title, text, onClose }: 
 			}, NOTIFICATION_DURATION_MS)
 			return () => clearTimeout(timer)
 		}
-	}, [show])
-
-	const handleClose = () => {
-		setShow(false)
-		if (onClose) onClose()
-	}
+	}, [show, handleClose])
 
 	return (
 		<>

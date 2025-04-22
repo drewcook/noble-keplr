@@ -5,7 +5,7 @@ import { ChainInfo, Keplr, Key } from '@keplr-wallet/types'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Address } from 'viem'
 
-import { NOBLE_MAINNET_CHAIN_ID, NOBLE_TESTNET_CHAIN_ID, NOBLE_TESTNET_RPC_URL } from '$/lib/constants'
+import { PREFERRED_NETWORK, SUPPORTED_NETWORKS } from '$/lib/constants'
 
 type KeplrWalletProviderProps = {
 	children: React.ReactNode
@@ -54,8 +54,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 	const getKeplr = (): Keplr | undefined => {
 		if (typeof window === 'undefined') return undefined
 
-		/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-		if ((window as any).keplr) {
+		if (window.keplr) {
 			return new KeplrFallback(() => {
 				// Handler called when real Keplr is not installed.
 				// Show appropriate warning to users.
@@ -78,30 +77,30 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 		resetMessages()
 
 		try {
-			// Set up Keplr
-			await keplrInstance.enable(NOBLE_MAINNET_CHAIN_ID)
+			// Set up Keplr (purposefully use mainnet to show prompt for suggested chain)
+			await keplrInstance.enable(SUPPORTED_NETWORKS.NOBLE_MAINNET.CHAIN_ID)
 
 			// Suggest the preferred chain if user doesn't have it selected in Keplr
 			try {
-				const chainInfoWithoutEndpoints = await keplrInstance.getChainInfoWithoutEndpoints(NOBLE_TESTNET_CHAIN_ID)
+				const chainInfoWithoutEndpoints = await keplrInstance.getChainInfoWithoutEndpoints(PREFERRED_NETWORK.CHAIN_ID)
 				const chainInfo: ChainInfo = {
 					...chainInfoWithoutEndpoints,
-					rpc: NOBLE_TESTNET_RPC_URL,
-					rest: NOBLE_TESTNET_RPC_URL,
+					rpc: PREFERRED_NETWORK.RPC_URL,
+					rest: PREFERRED_NETWORK.RPC_URL,
 					// Just some TS finagling with this implementation, probably a better way to do this...
 					evm: {
-						chainId: parseInt(NOBLE_TESTNET_CHAIN_ID), // NaN
-						rpc: NOBLE_TESTNET_RPC_URL,
+						chainId: parseInt(PREFERRED_NETWORK.CHAIN_ID), // NaN
+						rpc: PREFERRED_NETWORK.RPC_URL,
 					},
 				}
 				await keplrInstance.experimentalSuggestChain(chainInfo)
 				setSuccessMsg('Wallet connected!')
-			} catch (error) {
+			} catch {
 				setErrorMsg('Failed to suggest chain')
 			}
 
 			// Get the current account and address
-			const key = await keplrInstance.getKey(NOBLE_MAINNET_CHAIN_ID)
+			const key = await keplrInstance.getKey(PREFERRED_NETWORK.CHAIN_ID)
 			if (key.ethereumHexAddress) {
 				setIsConnected(true)
 				setAccount(key)

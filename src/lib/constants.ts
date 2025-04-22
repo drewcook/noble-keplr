@@ -1,11 +1,18 @@
 // URLs
 export const BASE_API_URL = 'https://api.noble.xyz'
-export const NOBLE_TESTNET_RPC_URL = 'https://rpc.testnet.noble.xyz'
-export const NOBLE_MAINNET_RPC_URL = 'https://noble-rpc.polkachu.com'
 
-// Chain IDs
-export const NOBLE_MAINNET_CHAIN_ID = 'noble-1'
-export const NOBLE_TESTNET_CHAIN_ID = 'grand-1'
+// Networks
+export const SUPPORTED_NETWORKS = {
+	NOBLE_MAINNET: {
+		CHAIN_ID: 'noble-1',
+		RPC_URL: 'https://noble-rpc.polkachu.com',
+	},
+	NOBLE_TESTNET: {
+		CHAIN_ID: 'grand-1',
+		RPC_URL: 'https://rpc.testnet.noble.xyz',
+	},
+}
+export const PREFERRED_NETWORK = SUPPORTED_NETWORKS.NOBLE_TESTNET
 
 // USDN
 export const USDN_DENOM = 'uusdn'
