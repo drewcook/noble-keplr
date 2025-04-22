@@ -6,6 +6,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { BASE_API_URL, USDN_DENOM } from '$/lib/constants'
 import { toUSDN } from '$/utils/formatters'
 
+import { useKeplrWallet } from './KeplrWalletProvider'
+
 type NobleDollarStatsProviderProps = {
 	children: React.ReactNode
 }
@@ -36,6 +38,9 @@ export const NobleDollarStatsProvider = ({ children }: NobleDollarStatsProviderP
 	const [totalPrincipal, setTotalPrincipal] = useState(defaultValues.totalPrincipal)
 	const [totalYieldAccrued, setTotalYieldAccrued] = useState(defaultValues.totalYieldAccrued)
 
+	// Hooks
+	const { getBalance } = useKeplrWallet()
+
 	// API Fetchers
 	const getTotalSupply = async () => {
 		const url = `${BASE_API_URL}/cosmos/bank/v1beta1/supply/by_denom?denom=${USDN_DENOM}`
@@ -53,15 +58,16 @@ export const NobleDollarStatsProvider = ({ children }: NobleDollarStatsProviderP
 		setTotalYieldAccrued(toUSDN(data.total_yield_accrued))
 	}
 
-	// NOTE: For some reason, this endpoint is returning zero even when passing in the correct testnet bech32 address
-	const getAccountBalance = async (account: Key): Promise<string> => {
-		const url = `${BASE_API_URL}/cosmos/bank/v1beta1/balances/${account.bech32Address}/by_denom?denom=${USDN_DENOM}`
-		const response = await fetch(url)
-		const data = await response.json()
-		return toUSDN(data.balance.amount)
+	const getAccountBalance = async (): Promise<string> => {
+		// NOTE: For some reason, this endpoint is returning zero even when passing in the correct testnet bech32 address
+		// const url = `${BASE_API_URL}/cosmos/bank/v1beta1/balances/${account.bech32Address}/by_denom?denom=${USDN_DENOM}`
+		// const response = await fetch(url)
+		// const data = await response.json()
+		const balance = await getBalance(USDN_DENOM)
+		return toUSDN(balance)
 	}
 
-	// TODO: Stub out other endpoints and expose them. f it expands to other tokens, rename the provider to represent that (i.e. TokenStatsProvider)
+	// TODO: Stub out other endpoints and expose them. If it expands to other tokens, rename the provider to better represent that (i.e. TokenStatsProvider)
 
 	useEffect(() => {
 		getStats()

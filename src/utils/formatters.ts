@@ -1,6 +1,6 @@
 import { Address, formatUnits } from 'viem'
 
-import { DEFAULT_DECIMALS_PRECISION, USDN_DECIMALS } from '$/lib/constants'
+import { DEFAULT_DECIMALS_PRECISION, USDC_DECIMALS, USDC_DENOM, USDN_DECIMALS, USDN_DENOM } from '$/lib/constants'
 
 import { toBigInt } from './bigint'
 
@@ -12,6 +12,17 @@ import { toBigInt } from './bigint'
 export const toUSDN = (value: string | number | bigint | undefined | null): string => {
 	if (!value) return '-'
 	return formatUnits(toBigInt(value), USDN_DECIMALS)
+}
+
+export const toUSDC = (value: string | number | bigint | undefined | null): string => {
+	if (!value) return '-'
+	return formatUnits(toBigInt(value), USDC_DECIMALS)
+}
+
+export const displayDenom = (denom: string): string => {
+	if (denom === USDN_DENOM) return 'USDN'
+	if (denom === USDC_DENOM) return 'USDC'
+	return denom
 }
 
 /**

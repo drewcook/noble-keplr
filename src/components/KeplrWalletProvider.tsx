@@ -1,11 +1,14 @@
 'use client'
 
+import { AccountData, OfflineSigner } from '@cosmjs/proto-signing'
+import { SigningStargateClient } from '@cosmjs/stargate'
 import { KeplrFallback } from '@keplr-wallet/provider-extension'
 import { ChainInfo, Keplr, Key } from '@keplr-wallet/types'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Address } from 'viem'
 
-import { NOBLE_MAINNET_CHAIN_ID, NOBLE_TESTNET_CHAIN_ID, NOBLE_TESTNET_RPC_URL } from '$/lib/constants'
+import { PREFERRED_NETWORK } from '$/lib/constants'
+import { displayDenom } from '$/utils/formatters'
 
 type KeplrWalletProviderProps = {
 	children: React.ReactNode
@@ -17,6 +20,7 @@ type KeplrWalletContextType = {
 	account: Key | null
 	connect: () => Promise<void>
 	disconnect: () => Promise<void>
+	getBalance: (denom: string) => Promise<string>
 	successMsg: string
 	errorMsg: string
 }
@@ -28,6 +32,7 @@ const defaultValues: KeplrWalletContextType = {
 	account: null,
 	connect: async () => {},
 	disconnect: async () => {},
+	getBalance: async () => '',
 	successMsg: '',
 	errorMsg: '',
 }
@@ -79,19 +84,19 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 
 		try {
 			// Set up Keplr
-			await keplrInstance.enable(NOBLE_MAINNET_CHAIN_ID)
+			await keplrInstance.enable(PREFERRED_NETWORK.CHAIN_ID)
 
 			// Suggest the preferred chain if user doesn't have it selected in Keplr
 			try {
-				const chainInfoWithoutEndpoints = await keplrInstance.getChainInfoWithoutEndpoints(NOBLE_TESTNET_CHAIN_ID)
+				const chainInfoWithoutEndpoints = await keplrInstance.getChainInfoWithoutEndpoints(PREFERRED_NETWORK.CHAIN_ID)
 				const chainInfo: ChainInfo = {
 					...chainInfoWithoutEndpoints,
-					rpc: NOBLE_TESTNET_RPC_URL,
-					rest: NOBLE_TESTNET_RPC_URL,
-					// Just some TS finagling with this implementation, probably a better way to do this...
+					rpc: PREFERRED_NETWORK.RPC_URL,
+					rest: PREFERRED_NETWORK.RPC_URL,
+					// Just some TS finagling with this implementation. There's probably a better way to get a ChainInfo object for 'grand-1'
 					evm: {
-						chainId: parseInt(NOBLE_TESTNET_CHAIN_ID), // NaN
-						rpc: NOBLE_TESTNET_RPC_URL,
+						chainId: parseInt(PREFERRED_NETWORK.CHAIN_ID), // NaN
+						rpc: PREFERRED_NETWORK.RPC_URL,
 					},
 				}
 				await keplrInstance.experimentalSuggestChain(chainInfo)
@@ -101,7 +106,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 			}
 
 			// Get the current account and address
-			const key = await keplrInstance.getKey(NOBLE_MAINNET_CHAIN_ID)
+			const key = await keplrInstance.getKey(PREFERRED_NETWORK.CHAIN_ID)
 			if (key.ethereumHexAddress) {
 				setIsConnected(true)
 				setAccount(key)
@@ -128,6 +133,24 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 		}
 	}
 
+	const handleGetBalance = async (denom: string): Promise<string> => {
+		if (!keplrInstance || (!isConnected && !address)) return ''
+
+		try {
+			// Create signing client
+			const offlineSigner: OfflineSigner = window.getOfflineSigner!(PREFERRED_NETWORK.CHAIN_ID)
+			const signingClient = await SigningStargateClient.connectWithSigner(PREFERRED_NETWORK.RPC_URL, offlineSigner)
+			// Get balance for first account
+			const account: AccountData = (await offlineSigner.getAccounts())[0]
+			const balance = await signingClient.getBalance(account.address, denom)
+			return balance.amount
+		} catch {
+			setErrorMsg(`Failed to get ${displayDenom(denom)} balance for ${address}`)
+		}
+
+		return ''
+	}
+
 	return (
 		<KeplrWalletContext.Provider
 			value={{
@@ -136,6 +159,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 				address,
 				connect: handleConnectWallet,
 				disconnect: handleDisconnectWallet,
+				getBalance: handleGetBalance,
 				successMsg,
 				errorMsg,
 			}}

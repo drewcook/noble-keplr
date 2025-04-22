@@ -14,6 +14,8 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@cosmjs/proto-signing": "^0.33.1",
+		"@cosmjs/stargate": "^0.33.1",
 		"@headlessui/react": "^2.2.2",
 		"@keplr-wallet/provider-extension": "^0.12.220",
 		"next": "15.3.0",
