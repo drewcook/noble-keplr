@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react'
 import { useKeplrWallet } from '$/components/KeplrWalletProvider'
 import { GridColumn, GridContainer } from '$/components/layout/Grid'
 import { useNobleDollarStats } from '$/components/NobleDollarStatsProvider'
-import { formatCompact, formatDecimal, formatPercentage } from '$/utils/formatters'
+import { USDC_DENOM, USDN_DENOM } from '$/lib/constants'
+import { displayDenom, formatCompact, formatDecimal, formatPercentage, toUSDC } from '$/utils/formatters'
 
 import MetaCard from '../components/MetaCard'
 
@@ -18,20 +19,28 @@ export default function DashboardPage() {
 	// State
 	const [activeTab, setActiveTab] = useState<(typeof SUB_NAVIGATION_ITEMS)[number]['id']>('overview')
 	const [usdnBalance, setUSDNBalance] = useState<string>('')
+	const [usdcBalance, setUSDCBalance] = useState<string>('')
 	// Hooks
-	const { totalSupply, totalHolders, totalYieldAccrued, getAccountBalance } = useNobleDollarStats()
-	const { isConnected, account } = useKeplrWallet()
+	const { totalSupply, totalHolders, totalYieldAccrued, getAccountBalance: getUSDNBalance } = useNobleDollarStats()
+	const { isConnected, account, getBalance } = useKeplrWallet()
 
 	// Effects
 	// Fetch the USDN balance for the connected address
 	useEffect(() => {
 		const fetchUSDNBalance = async () => {
 			if (isConnected && account) {
-				const balance = await getAccountBalance(account)
+				const balance = await getUSDNBalance(account)
 				setUSDNBalance(balance)
 			}
 		}
+		const fetchUSDCBalance = async () => {
+			if (isConnected && account) {
+				const balance = await getBalance(USDC_DENOM)
+				setUSDCBalance(toUSDC(balance))
+			}
+		}
 		fetchUSDNBalance()
+		fetchUSDCBalance()
 	}, [account, isConnected]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
 	return (
@@ -107,7 +116,21 @@ export default function DashboardPage() {
 				{activeTab === 'balances' && (
 					<section aria-label="Balances Content">
 						<div className="border-border border rounded-xl flex justify-center items-center min-h-100">
-							Balances TBD
+							<div className="flex flex-col gap-4">
+								{isConnected ? (
+									<div className="text-center">
+										<h3 className="text-lg mb-2">Account Balances</h3>
+										<div className="text-sm">
+											{usdnBalance} {displayDenom(USDN_DENOM)}
+										</div>
+										<div className="text-sm">
+											{usdcBalance} {displayDenom(USDC_DENOM)}
+										</div>
+									</div>
+								) : (
+									'Balances TBD'
+								)}
+							</div>
 						</div>
 					</section>
 				)}

@@ -1,11 +1,14 @@
 'use client'
 
+import { AccountData, OfflineSigner } from '@cosmjs/proto-signing'
+import { SigningStargateClient } from '@cosmjs/stargate'
 import { KeplrFallback } from '@keplr-wallet/provider-extension'
 import { ChainInfo, Keplr, Key } from '@keplr-wallet/types'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Address } from 'viem'
 
 import { PREFERRED_NETWORK } from '$/lib/constants'
+import { displayDenom } from '$/utils/formatters'
 
 type KeplrWalletProviderProps = {
 	children: React.ReactNode
@@ -17,6 +20,7 @@ type KeplrWalletContextType = {
 	account: Key | null
 	connect: () => Promise<void>
 	disconnect: () => Promise<void>
+	getBalance: (denom: string) => Promise<string>
 	successMsg: string
 	errorMsg: string
 }
@@ -28,6 +32,7 @@ const defaultValues: KeplrWalletContextType = {
 	account: null,
 	connect: async () => {},
 	disconnect: async () => {},
+	getBalance: async () => '',
 	successMsg: '',
 	errorMsg: '',
 }
@@ -87,7 +92,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 					...chainInfoWithoutEndpoints,
 					rpc: PREFERRED_NETWORK.RPC_URL,
 					rest: PREFERRED_NETWORK.RPC_URL,
-					// Just some TS finagling with this implementation, probably a better way to do this...
+					// Just some TS finagling with this implementation. There's probably a better way to get a ChainInfo object for 'grand-1'
 					evm: {
 						chainId: parseInt(PREFERRED_NETWORK.CHAIN_ID), // NaN
 						rpc: PREFERRED_NETWORK.RPC_URL,
@@ -127,6 +132,24 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 		}
 	}
 
+	const handleGetBalance = async (denom: string): Promise<string> => {
+		if (!keplrInstance || (!isConnected && !address)) return ''
+
+		try {
+			// Create signing client
+			const offlineSigner: OfflineSigner = window.getOfflineSigner!(PREFERRED_NETWORK.CHAIN_ID)
+			const signingClient = await SigningStargateClient.connectWithSigner(PREFERRED_NETWORK.RPC_URL, offlineSigner)
+			// Get balance for first account
+			const account: AccountData = (await offlineSigner.getAccounts())[0]
+			const balance = await signingClient.getBalance(account.address, denom)
+			return balance.amount
+		} catch {
+			setErrorMsg(`Failed to get ${displayDenom(denom)} balance for ${address}`)
+		}
+
+		return ''
+	}
+
 	return (
 		<KeplrWalletContext.Provider
 			value={{
@@ -135,6 +158,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 				address,
 				connect: handleConnectWallet,
 				disconnect: handleDisconnectWallet,
+				getBalance: handleGetBalance,
 				successMsg,
 				errorMsg,
 			}}
