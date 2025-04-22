@@ -33,14 +33,13 @@ export default function DashboardPage() {
 				setUSDNBalance(balance)
 			}
 		}
-		fetchUSDNBalance()
-		// TODO: Get balances of other tokens if/when exposed from the token provider, for example, we can use the getBalance helper directly and query for any token
 		const fetchUSDCBalance = async () => {
 			if (isConnected && account) {
 				const balance = await getBalance(USDC_DENOM)
 				setUSDCBalance(toUSDC(balance))
 			}
 		}
+		fetchUSDNBalance()
 		fetchUSDCBalance()
 	}, [account, isConnected]) /* eslint-disable-line react-hooks/exhaustive-deps */
 

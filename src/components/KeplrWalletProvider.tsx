@@ -59,8 +59,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 	const getKeplr = (): Keplr | undefined => {
 		if (typeof window === 'undefined') return undefined
 
-		/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-		if ((window as any).keplr) {
+		if (window.keplr) {
 			return new KeplrFallback(() => {
 				// Handler called when real Keplr is not installed.
 				// Show appropriate warning to users.
@@ -101,7 +100,7 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 				}
 				await keplrInstance.experimentalSuggestChain(chainInfo)
 				setSuccessMsg('Wallet connected!')
-			} catch (error) {
+			} catch {
 				setErrorMsg('Failed to suggest chain')
 			}
 
