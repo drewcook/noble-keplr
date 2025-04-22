@@ -77,8 +77,8 @@ export const KeplrWalletProvider = ({ children }: KeplrWalletProviderProps) => {
 		resetMessages()
 
 		try {
-			// Set up Keplr (purposefully use mainnet to show prompt for suggested chain)
-			await keplrInstance.enable(SUPPORTED_NETWORKS.NOBLE_MAINNET.CHAIN_ID)
+			// Set up Keplr
+			await keplrInstance.enable(PREFERRED_NETWORK.CHAIN_ID)
 
 			// Suggest the preferred chain if user doesn't have it selected in Keplr
 			try {
