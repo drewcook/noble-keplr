@@ -18,8 +18,8 @@ const SUB_NAVIGATION_ITEMS = [
 export default function DashboardPage() {
 	// State
 	const [activeTab, setActiveTab] = useState<(typeof SUB_NAVIGATION_ITEMS)[number]['id']>('overview')
-	const [usdnBalance, setUSDNBalance] = useState<string>('-')
-	const [usdcBalance, setUSDCBalance] = useState<string>('-')
+	const [usdnBalance, setUSDNBalance] = useState<string>('')
+	const [usdcBalance, setUSDCBalance] = useState<string>('')
 	// Hooks
 	const { totalSupply, totalHolders, totalYieldAccrued, getAccountBalance: getUSDNBalance } = useNobleDollarStats()
 	const { isConnected, account, getBalance } = useKeplrWallet()
