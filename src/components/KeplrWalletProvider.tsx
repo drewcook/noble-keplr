@@ -5,7 +5,7 @@ import { ChainInfo, Keplr, Key } from '@keplr-wallet/types'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Address } from 'viem'
 
-import { PREFERRED_NETWORK, SUPPORTED_NETWORKS } from '$/lib/constants'
+import { PREFERRED_NETWORK } from '$/lib/constants'
 
 type KeplrWalletProviderProps = {
 	children: React.ReactNode
