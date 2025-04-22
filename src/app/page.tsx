@@ -24,7 +24,6 @@ export default function DashboardPage() {
 
 	// Effects
 	// Fetch the USDN balance for the connected address
-	// TODO: Get balances of other tokens if/when exposed from the token provider
 	useEffect(() => {
 		const fetchUSDNBalance = async () => {
 			if (isConnected && account) {
@@ -33,7 +32,7 @@ export default function DashboardPage() {
 			}
 		}
 		fetchUSDNBalance()
-	}, [account, isConnected, getAccountBalance])
+	}, [account, isConnected]) /* eslint-disable-line react-hooks/exhaustive-deps */
 
 	return (
 		<GridContainer mdColumns={4}>
